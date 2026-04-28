@@ -1,7 +1,7 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using FSI.SmartPark.Domain.Entities;
 
-namespace FSI.SmartPark.UnitTests.Domain;
+namespace FSI.SmartPark.Test.UnitTests.Domain;
 
 /// <summary>
 /// Testes unitários para EntityBase — cobertura de Soft Delete, Restore e igualdade.

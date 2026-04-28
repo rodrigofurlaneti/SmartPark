@@ -1,4 +1,4 @@
-﻿namespace FSI.SmartPark.IntegrationTests;
+﻿namespace FSI.SmartPark.Test.IntegrationTests;
 
 public class UnitTest1
 {

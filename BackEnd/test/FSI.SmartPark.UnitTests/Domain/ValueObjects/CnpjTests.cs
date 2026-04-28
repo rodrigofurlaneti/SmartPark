@@ -1,7 +1,7 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using FSI.SmartPark.Domain.ValueObjects;
 
-namespace FSI.SmartPark.UnitTests.Domain.ValueObjects;
+namespace FSI.SmartPark.Test.UnitTests.Domain.ValueObjects;
 
 /// <summary>
 /// Testes unitários para o Value Object Cnpj.

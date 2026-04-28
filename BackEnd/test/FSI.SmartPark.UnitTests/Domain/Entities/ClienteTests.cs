@@ -1,8 +1,8 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using FSI.SmartPark.Domain.Entities.Comercial;
 using FSI.SmartPark.Domain.ValueObjects;
 
-namespace FSI.SmartPark.UnitTests.Domain.Entities;
+namespace FSI.SmartPark.Test.UnitTests.Domain.Entities;
 
 /// <summary>
 /// Testes unitários para a entidade Cliente — regras de negócio do domínio.

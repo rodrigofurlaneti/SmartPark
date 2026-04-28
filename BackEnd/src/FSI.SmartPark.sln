@@ -10,6 +10,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSI.SmartPark.Infrastructur
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSI.SmartPark.API", "FSI.SmartPark.API\FSI.SmartPark.API.csproj", "{A1000004-0000-0000-0000-000000000004}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSI.SmartPark.Test.ArchitectureTests", "..\test\FSI.SmartPark.ArchitectureTests\FSI.SmartPark.Test.ArchitectureTests.csproj", "{B4AF7180-1154-63D9-135C-EC8B929F2BDD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSI.SmartPark.Test.E2ETests", "..\test\FSI.SmartPark.E2ETests\FSI.SmartPark.Test.E2ETests.csproj", "{E6986FBC-1B1B-E384-74C8-098CDBF55327}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSI.SmartPark.Test.UnitTests", "..\test\FSI.SmartPark.UnitTests\FSI.SmartPark.Test.UnitTests.csproj", "{6CA2D934-5531-E367-1372-B38B25DB69EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSI.SmartPark.Test.IntegrationTests", "..\test\FSI.SmartPark.IntegrationTests\FSI.SmartPark.Test.IntegrationTests.csproj", "{72F9EF1D-822A-D11E-7754-10C9090959A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,8 +40,27 @@ Global
 		{A1000004-0000-0000-0000-000000000004}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1000004-0000-0000-0000-000000000004}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1000004-0000-0000-0000-000000000004}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4AF7180-1154-63D9-135C-EC8B929F2BDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4AF7180-1154-63D9-135C-EC8B929F2BDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4AF7180-1154-63D9-135C-EC8B929F2BDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4AF7180-1154-63D9-135C-EC8B929F2BDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6986FBC-1B1B-E384-74C8-098CDBF55327}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6986FBC-1B1B-E384-74C8-098CDBF55327}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6986FBC-1B1B-E384-74C8-098CDBF55327}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6986FBC-1B1B-E384-74C8-098CDBF55327}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6CA2D934-5531-E367-1372-B38B25DB69EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6CA2D934-5531-E367-1372-B38B25DB69EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6CA2D934-5531-E367-1372-B38B25DB69EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6CA2D934-5531-E367-1372-B38B25DB69EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72F9EF1D-822A-D11E-7754-10C9090959A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72F9EF1D-822A-D11E-7754-10C9090959A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72F9EF1D-822A-D11E-7754-10C9090959A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72F9EF1D-822A-D11E-7754-10C9090959A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6D92A142-E4E4-4F71-8ACC-2419CEF91DC6}
 	EndGlobalSection
 EndGlobal
