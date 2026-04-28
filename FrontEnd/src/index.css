@@ -1,0 +1,56 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:           #0A0E1A;
+  --surface:      #111827;
+  --surface-hover:#1a2235;
+  --border:       #1E2D45;
+  --accent:       #00D4FF;
+  --accent-dim:   #0099BB;
+  --success:      #00E5A0;
+  --warning:      #FFB020;
+  --danger:       #FF4560;
+  --text:         #E8EDF5;
+  --text-muted:   #6B7A99;
+  --text-dim:     #9AAAC0;
+}
+
+html, body, #root {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+input, select, textarea {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+
+button { cursor: pointer; font-family: 'Space Grotesk', sans-serif; }
+
+a { color: var(--accent); text-decoration: none; }
+
+@keyframes fadeIn  { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeOut { from { opacity:1; } to { opacity:0; } }
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes pulse   { 0%,100%{opacity:1;} 50%{opacity:.4;} }
+
+.fade-in  { animation: fadeIn  0.3s ease forwards; }
+.mono     { font-family: 'JetBrains Mono', monospace; }
+.blink    { animation: pulse 1.5s ease infinite; }
