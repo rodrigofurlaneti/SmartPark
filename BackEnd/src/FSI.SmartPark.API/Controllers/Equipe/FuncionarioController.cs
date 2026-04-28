@@ -1,49 +1,88 @@
+using FSI.SmartPark.Application.Commands.Equipe.Funcionario;
+using FSI.SmartPark.Application.Queries.Equipe.Funcionario;
 using FSI.SmartPark.Application.DTOs.Equipe;
-using FSI.SmartPark.Application.Interfaces.Equipe;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FSI.SmartPark.API.Controllers.Equipe;
 
+/// <summary>
+/// Controller REST — Funcionario.
+/// Padrão CQRS: leitura via Queries, escrita via Commands, tudo via ISender (MediatR).
+/// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/funcionarios")]
+[Produces("application/json")]
 public class FuncionarioController : ControllerBase
 {
-    private readonly IFuncionarioService _service;
+    private readonly ISender _sender;
+    public FuncionarioController(ISender sender) => _sender = sender;
 
-    public FuncionarioController(IFuncionarioService service) => _service = service;
+    // ── Queries ──────────────────────────────────────────────────────────────
 
+    /// <summary>Lista todos os registros ativos.</summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<FuncionarioResponseDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll(CancellationToken ct)
+        => Ok(await _sender.Send(new GetAllFuncionariosQuery(), ct));
+
+    /// <summary>Busca por Id.</summary>
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> ObterPorId(int id)
+    [ProducesResponseType(typeof(FuncionarioResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById(int id, CancellationToken ct)
     {
-        var result = await _service.ObterPorId(id);
+        var result = await _sender.Send(new GetFuncionarioByIdQuery(id), ct);
         return result is null ? NotFound() : Ok(result);
     }
 
-    [HttpGet("ativos")]
-    public async Task<IActionResult> ListarAtivos() => Ok(await _service.ListarAtivos());
+    // ── Commands ─────────────────────────────────────────────────────────────
 
-    [HttpGet("unidade/{unidadeId:int}")]
-    public async Task<IActionResult> ListarPorUnidade(int unidadeId)
-        => Ok(await _service.ListarPorUnidade(unidadeId));
-
+    /// <summary>Cria novo Funcionario.</summary>
     [HttpPost]
-    public async Task<IActionResult> Criar([FromBody] FuncionarioRequestDto dto)
+    [ProducesResponseType(typeof(FuncionarioResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Create([FromBody] CreateFuncionarioRequest create, CancellationToken ct)
     {
-        var result = await _service.Criar(dto);
-        return CreatedAtAction(nameof(ObterPorId), new { id = result.Id }, result);
+        var result = await _sender.Send(
+            new CreateFuncionarioCommand(create.PessoaId,
+            create.Salario,
+            create.Escala,
+            create.EmpresaId), ct);
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
-    [HttpPut("{id:int}/salario/{valor:decimal}")]
-    public async Task<IActionResult> AlterarSalario(int id, decimal valor)
+    /// <summary>Atualiza Funcionario.</summary>
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(typeof(FuncionarioResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateFuncionarioRequest update, CancellationToken ct)
     {
-        await _service.AlterarSalario(id, valor);
-        return NoContent();
+        var result = await _sender.Send(
+            new UpdateFuncionarioCommand(id,
+            update.Salario), ct);
+        return Ok(result);
     }
-
+    /// <summary>Soft Delete — marca IsDeleted = true.</summary>
     [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Desligar(int id)
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
-        await _service.Desligar(id);
+        await _sender.Send(new DeleteFuncionarioCommand(id), ct);
         return NoContent();
     }
 }
+
+/// <summary>Payload para criação de Funcionario.</summary>
+public sealed record CreateFuncionarioRequest(
+    int PessoaId,
+    decimal Salario,
+    FSI.SmartPark.Domain.Enums.TipoEscalaFuncionario Escala,
+    int EmpresaId
+);
+
+/// <summary>Payload para atualização de Funcionario.</summary>
+public sealed record UpdateFuncionarioRequest(
+    decimal Salario
+);

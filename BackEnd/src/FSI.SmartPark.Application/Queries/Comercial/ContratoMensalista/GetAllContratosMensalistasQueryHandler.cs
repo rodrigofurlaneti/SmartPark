@@ -1,0 +1,20 @@
+using FSI.SmartPark.Application.DTOs.Comercial;
+using FSI.SmartPark.Domain.Interfaces.Comercial;
+using FSI.SmartPark.Domain.Entities.Comercial;
+using MediatR;
+
+namespace FSI.SmartPark.Application.Queries.Comercial.ContratoMensalista;
+
+public sealed class GetAllContratosMensalistasQueryHandler
+    : IRequestHandler<GetAllContratosMensalistasQuery, IEnumerable<ContratoMensalistaResponseDto>>
+{
+    private readonly IContratoMensalistaRepository _repo;
+    public GetAllContratosMensalistasQueryHandler(IContratoMensalistaRepository repo) => _repo = repo;
+
+    public async Task<IEnumerable<ContratoMensalistaResponseDto>> Handle(GetAllContratosMensalistasQuery request, CancellationToken ct)
+    {
+        var lista = await _repo.GetAll(ct);
+        return lista.Select(ToDto);
+    }
+
+    private static ContratoMensalistaResponseDto ToDto(ContratoMensalista e) => new ContratoMensalistaResponseDto(e.Id, e.NumeroContrato, e.Cliente_Id, e.Unidade_Id, e.Valor, e.Ativo, e.DataVencimento, e.NumeroVagas);
