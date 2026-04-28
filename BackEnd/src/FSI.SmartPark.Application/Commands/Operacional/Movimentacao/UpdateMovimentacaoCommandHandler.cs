@@ -1,6 +1,5 @@
 using FSI.SmartPark.Application.DTOs.Operacional;
 using FSI.SmartPark.Domain.Interfaces.Operacional;
-using FSI.SmartPark.Domain.Entities.Operacional;
 using MediatR;
 
 namespace FSI.SmartPark.Application.Commands.Operacional.Movimentacao;
@@ -21,4 +20,5 @@ public sealed class UpdateMovimentacaoCommandHandler
         return ToDto(entidade);
     }
 
-    private static MovimentacaoResponseDto ToDto(Movimentacao e) => new MovimentacaoResponseDto(e.Id, e.Ticket, e.Placa, e.DataEntrada, e.DataSaida, e.ValorCobrado, e.FormaPagamento, e.TipoCliente, e.Unidade_Id, !e.DataSaida.HasValue);
+    private static MovimentacaoResponseDto ToDto(FSI.SmartPark.Domain.Entities.Operacional.Movimentacao e) => new MovimentacaoResponseDto(e.Id, e.Ticket, e.Placa, e.DataEntrada, e.DataSaida, e.ValorCobrado, e.FormaPagamento, e.TipoCliente, e.Unidade_Id, !e.DataSaida.HasValue);
+}

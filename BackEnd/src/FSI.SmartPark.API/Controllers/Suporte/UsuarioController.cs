@@ -72,6 +72,17 @@ public class UsuarioController : ControllerBase
         await _sender.Send(new DeleteUsuarioCommand(id), ct);
         return NoContent();
     }
+
+    /// <summary>Autentica um usuário e retorna o token de acesso.</summary>
+    [HttpPost("autenticar")]
+    [ProducesResponseType(typeof(TokenResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Autenticar([FromBody] AutenticarRequest request, CancellationToken ct)
+    {
+        var result = await _sender.Send(new AuthenticateCommand(request.Login, request.Senha), ct);
+        return Ok(result);
+    }
 }
 
 /// <summary>Payload para criação de Usuario.</summary>
@@ -85,4 +96,10 @@ public sealed record CreateUsuarioRequest(
 /// <summary>Payload para atualização de Usuario.</summary>
 public sealed record UpdateUsuarioRequest(
     bool Ativo
+);
+
+/// <summary>Payload para autenticação de Usuario.</summary>
+public sealed record AutenticarRequest(
+    string Login,
+    string Senha
 );

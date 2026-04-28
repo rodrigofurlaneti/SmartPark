@@ -1,6 +1,5 @@
 using FSI.SmartPark.Application.DTOs.Financeiro;
 using FSI.SmartPark.Domain.Interfaces.Financeiro;
-using FSI.SmartPark.Domain.Entities.Financeiro;
 using MediatR;
 
 namespace FSI.SmartPark.Application.Commands.Financeiro.ContasAPagar;
@@ -20,4 +19,5 @@ public sealed class UpdateContasAPagarCommandHandler
         return ToDto(entidade);
     }
 
-    private static ContasAPagarResponseDto ToDto(ContasAPagar e) => new ContasAPagarResponseDto(e.Id, e.NumeroDocumento, e.DataVencimento, e.ValorTotal, (FSI.SmartPark.Domain.Enums.StatusContasAPagar)e.StatusConta, e.Fornecedor_Id, e.Unidade_Id);
+    private static ContasAPagarResponseDto ToDto(FSI.SmartPark.Domain.Entities.Financeiro.ContasAPagar e) => new ContasAPagarResponseDto(e.Id, e.NumeroDocumento, e.DataVencimento, e.ValorTotal, (FSI.SmartPark.Domain.Enums.StatusContasAPagar)e.StatusConta, e.Fornecedor_Id, e.Unidade_Id);
+}

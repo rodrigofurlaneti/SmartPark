@@ -24,7 +24,7 @@ public class PedidoSeloController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<PedidoSeloResponseDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(CancellationToken ct)
-        => Ok(await _sender.Send(new GetAllPedidoSelosQuery(), ct));
+        => Ok(await _sender.Send(new GetAllPedidosSeloQuery(), ct));
 
     /// <summary>Busca por Id.</summary>
     [HttpGet("{id:int}")]

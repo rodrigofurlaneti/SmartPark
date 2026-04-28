@@ -24,7 +24,7 @@ public class ContratoMensalistaController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<ContratoMensalistaResponseDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(CancellationToken ct)
-        => Ok(await _sender.Send(new GetAllContratoMensalistasQuery(), ct));
+        => Ok(await _sender.Send(new GetAllContratosMensalistasQuery(), ct));
 
     /// <summary>Busca por Id.</summary>
     [HttpGet("{id:int}")]

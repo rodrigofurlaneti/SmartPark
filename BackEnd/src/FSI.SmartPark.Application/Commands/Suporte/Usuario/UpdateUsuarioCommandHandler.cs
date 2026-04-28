@@ -1,6 +1,5 @@
 using FSI.SmartPark.Application.DTOs.Suporte;
 using FSI.SmartPark.Domain.Interfaces.Suporte;
-using FSI.SmartPark.Domain.Entities.Suporte;
 using MediatR;
 
 namespace FSI.SmartPark.Application.Commands.Suporte.Usuario;
@@ -20,4 +19,5 @@ public sealed class UpdateUsuarioCommandHandler
         return ToDto(entidade);
     }
 
-    private static UsuarioResponseDto ToDto(Usuario e) => new UsuarioResponseDto(e.Id, e.Login, e.Ativo, e.Unidade_Id, e.Funcionario_Id);
+    private static UsuarioResponseDto ToDto(FSI.SmartPark.Domain.Entities.Suporte.Usuario e) => new UsuarioResponseDto(e.Id, e.Login, e.Ativo, e.Unidade_Id, e.Funcionario_Id);
+}

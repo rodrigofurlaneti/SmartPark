@@ -1,6 +1,5 @@
 using FSI.SmartPark.Application.DTOs.Operacional;
 using FSI.SmartPark.Domain.Interfaces.Operacional;
-using FSI.SmartPark.Domain.Entities.Operacional;
 using MediatR;
 
 namespace FSI.SmartPark.Application.Commands.Operacional.Unidade;
@@ -20,4 +19,5 @@ public sealed class UpdateUnidadeCommandHandler
         return ToDto(entidade);
     }
 
-    private static UnidadeResponseDto ToDto(Unidade e) => new UnidadeResponseDto(e.Id, e.Codigo, e.Nome, e.NumeroVaga, e.Ativa, e.DiaVencimento, e.CNPJ, e.Empresa_Id, e.Funcionario_Id, e.Endereco_Id);
+    private static UnidadeResponseDto ToDto(FSI.SmartPark.Domain.Entities.Operacional.Unidade e) => new UnidadeResponseDto(e.Id, e.Codigo, e.Nome, e.NumeroVaga, e.Ativa, e.DiaVencimento, e.CNPJ, e.Empresa_Id, e.Funcionario_Id, e.Endereco_Id);
+}

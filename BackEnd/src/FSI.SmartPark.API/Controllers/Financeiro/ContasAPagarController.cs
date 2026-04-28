@@ -24,7 +24,7 @@ public class ContasAPagarController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<ContasAPagarResponseDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(CancellationToken ct)
-        => Ok(await _sender.Send(new GetAllContasAPagarsQuery(), ct));
+        => Ok(await _sender.Send(new GetAllContasAPagarQuery(), ct));
 
     /// <summary>Busca por Id.</summary>
     [HttpGet("{id:int}")]

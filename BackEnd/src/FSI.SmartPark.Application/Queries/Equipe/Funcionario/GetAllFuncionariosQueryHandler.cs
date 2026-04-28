@@ -1,6 +1,5 @@
 using FSI.SmartPark.Application.DTOs.Equipe;
 using FSI.SmartPark.Domain.Interfaces.Equipe;
-using FSI.SmartPark.Domain.Entities.Equipe;
 using MediatR;
 
 namespace FSI.SmartPark.Application.Queries.Equipe.Funcionario;
@@ -17,4 +16,5 @@ public sealed class GetAllFuncionariosQueryHandler
         return lista.Select(ToDto);
     }
 
-    private static FuncionarioResponseDto ToDto(Funcionario e) => new FuncionarioResponseDto(e.Id, e.Pessoa_Id, e.Codigo, e.Salario, e.Status, e.TipoEscala, e.DataAdmissao, e.Cargo_Id, e.Unidade_Id);
+    private static FuncionarioResponseDto ToDto(FSI.SmartPark.Domain.Entities.Equipe.Funcionario e) => new FuncionarioResponseDto(e.Id, e.Pessoa_Id, e.Codigo, e.Salario, e.Status, e.TipoEscala, e.DataAdmissao, e.Cargo_Id, e.Unidade_Id);
+}

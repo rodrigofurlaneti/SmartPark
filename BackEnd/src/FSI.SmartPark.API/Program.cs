@@ -1,14 +1,3 @@
-using FSI.SmartPark.API.Middleware;
-using FSI.SmartPark.Application.Services.Comercial;
-using FSI.SmartPark.Application.Services.Equipe;
-using FSI.SmartPark.Application.Services.Financeiro;
-using FSI.SmartPark.Application.Services.Operacional;
-using FSI.SmartPark.Application.Services.Suporte;
-using FSI.SmartPark.Application.Interfaces.Comercial;
-using FSI.SmartPark.Application.Interfaces.Equipe;
-using FSI.SmartPark.Application.Interfaces.Financeiro;
-using FSI.SmartPark.Application.Interfaces.Operacional;
-using FSI.SmartPark.Application.Interfaces.Suporte;
 using FSI.SmartPark.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,23 +6,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddInfrastructure();
 
 // ─── CQRS via MediatR ────────────────────────────────────────────────────────
-// Registra todos os IRequestHandler<,> do assembly Application automaticamente.
+// Registra automaticamente todos os IRequestHandler<,> do assembly Application.
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(
         typeof(FSI.SmartPark.Application.Commands.Empresa.CreateEmpresaCommand).Assembly));
-
-// ─── Application Services (legacy — gradualmente migrados para CQRS) ─────────
-builder.Services.AddScoped<IMovimentacaoService,        MovimentacaoService>();
-builder.Services.AddScoped<IFaturamentoService,         FaturamentoService>();
-builder.Services.AddScoped<IUnidadeService,             UnidadeService>();
-builder.Services.AddScoped<IClienteService,             ClienteService>();
-builder.Services.AddScoped<IContratoMensalistaService,  ContratoMensalistaService>();
-builder.Services.AddScoped<IPedidoSeloService,          PedidoSeloService>();
-builder.Services.AddScoped<IContasAPagarService,        ContasAPagarService>();
-builder.Services.AddScoped<IFuncionarioService,         FuncionarioService>();
-builder.Services.AddScoped<IControlePontoService,       ControlePontoService>();
-builder.Services.AddScoped<IUsuarioService,             UsuarioService>();
-builder.Services.AddScoped<IEstoqueService,             EstoqueService>();
 
 // ─── Swagger + Controllers ────────────────────────────────────────────────────
 builder.Services.AddControllers();
@@ -68,10 +44,10 @@ app.UseExceptionHandler(errorApp =>
 
         var (status, mensagem) = error.Error switch
         {
-            KeyNotFoundException    => (StatusCodes.Status404NotFound,    error.Error.Message),
-            ArgumentException       => (StatusCodes.Status400BadRequest,  error.Error.Message),
-            UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, error.Error.Message),
-            _                       => (StatusCodes.Status500InternalServerError, "Erro interno do servidor.")
+            KeyNotFoundException        => (StatusCodes.Status404NotFound,       error.Error.Message),
+            ArgumentException           => (StatusCodes.Status400BadRequest,     error.Error.Message),
+            UnauthorizedAccessException => (StatusCodes.Status401Unauthorized,   error.Error.Message),
+            _                           => (StatusCodes.Status500InternalServerError, "Erro interno do servidor.")
         };
 
         context.Response.StatusCode  = status;

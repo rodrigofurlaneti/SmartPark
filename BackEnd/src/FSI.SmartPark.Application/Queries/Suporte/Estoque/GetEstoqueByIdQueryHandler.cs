@@ -1,6 +1,5 @@
 using FSI.SmartPark.Application.DTOs.Suporte;
 using FSI.SmartPark.Domain.Interfaces.Suporte;
-using FSI.SmartPark.Domain.Entities.Suporte;
 using MediatR;
 
 namespace FSI.SmartPark.Application.Queries.Suporte.Estoque;
@@ -17,5 +16,5 @@ public sealed class GetEstoqueByIdQueryHandler
         return entidade is null ? null : ToDto(entidade);
     }
 
-    private static EstoqueResponseDto ToDto(Estoque e) => new EstoqueResponseDto(e.Id, e.Nome, e.EstoquePrincipal, e.Unidade_Id);
+    private static EstoqueResponseDto ToDto(FSI.SmartPark.Domain.Entities.Suporte.Estoque e) => new EstoqueResponseDto(e.Id, e.Nome, e.EstoquePrincipal, e.Unidade_Id);
 }

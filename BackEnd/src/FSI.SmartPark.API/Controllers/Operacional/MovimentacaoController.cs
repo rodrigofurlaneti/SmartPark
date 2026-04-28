@@ -24,7 +24,7 @@ public class MovimentacaoController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<MovimentacaoResponseDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll(CancellationToken ct)
-        => Ok(await _sender.Send(new GetAllMovimentacaosQuery(), ct));
+        => Ok(await _sender.Send(new GetAllMovimentacoesQuery(), ct));
 
     /// <summary>Busca por Id.</summary>
     [HttpGet("{id:int}")]
