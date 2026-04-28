@@ -1,4 +1,4 @@
-﻿using FSI.SmartPark.API.Middleware;
+using FSI.SmartPark.API.Middleware;
 using FSI.SmartPark.Application.Services.Comercial;
 using FSI.SmartPark.Application.Services.Equipe;
 using FSI.SmartPark.Application.Services.Financeiro;
@@ -13,23 +13,29 @@ using FSI.SmartPark.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Infrastructure (Dapper + MySQL)
+// ─── Infrastructure (Dapper + MySQL) ─────────────────────────────────────────
 builder.Services.AddInfrastructure();
 
-// Application Services
-builder.Services.AddScoped<IMovimentacaoService,   MovimentacaoService>();
-builder.Services.AddScoped<IFaturamentoService,    FaturamentoService>();
-builder.Services.AddScoped<IUnidadeService,        UnidadeService>();
-builder.Services.AddScoped<IClienteService,        ClienteService>();
-builder.Services.AddScoped<IContratoMensalistaService, ContratoMensalistaService>();
-builder.Services.AddScoped<IPedidoSeloService,     PedidoSeloService>();
-builder.Services.AddScoped<IContasAPagarService,   ContasAPagarService>();
-builder.Services.AddScoped<IFuncionarioService,    FuncionarioService>();
-builder.Services.AddScoped<IControlePontoService,  ControlePontoService>();
-builder.Services.AddScoped<IUsuarioService,        UsuarioService>();
-builder.Services.AddScoped<IEstoqueService,        EstoqueService>();
+// ─── CQRS via MediatR ────────────────────────────────────────────────────────
+// Registra todos os IRequestHandler<,> do assembly Application automaticamente.
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(
+        typeof(FSI.SmartPark.Application.Commands.Empresa.CreateEmpresaCommand).Assembly));
 
-// Swagger + Controllers
+// ─── Application Services (legacy — gradualmente migrados para CQRS) ─────────
+builder.Services.AddScoped<IMovimentacaoService,        MovimentacaoService>();
+builder.Services.AddScoped<IFaturamentoService,         FaturamentoService>();
+builder.Services.AddScoped<IUnidadeService,             UnidadeService>();
+builder.Services.AddScoped<IClienteService,             ClienteService>();
+builder.Services.AddScoped<IContratoMensalistaService,  ContratoMensalistaService>();
+builder.Services.AddScoped<IPedidoSeloService,          PedidoSeloService>();
+builder.Services.AddScoped<IContasAPagarService,        ContasAPagarService>();
+builder.Services.AddScoped<IFuncionarioService,         FuncionarioService>();
+builder.Services.AddScoped<IControlePontoService,       ControlePontoService>();
+builder.Services.AddScoped<IUsuarioService,             UsuarioService>();
+builder.Services.AddScoped<IEstoqueService,             EstoqueService>();
+
+// ─── Swagger + Controllers ────────────────────────────────────────────────────
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -37,59 +43,58 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new() { Title = "SmartPark API", Version = "v1" });
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        In          = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Description = "Informe: Bearer {token}",
-        Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
+        Name        = "Authorization",
+        Type        = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
     });
 });
 
-// CORS
+// ─── CORS ─────────────────────────────────────────────────────────────────────
 builder.Services.AddCors(o => o.AddPolicy("SmartParkPolicy", p =>
     p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
-
+// =============================================================================
 var app = builder.Build();
+// =============================================================================
 
-// 1. Exception Handler PRIMEIRO - captura todos os erros
+// 1. Exception Handler global — captura todos os erros não tratados
 app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
     {
         var error = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
-        if (error != null)
+        if (error is null) return;
+
+        var (status, mensagem) = error.Error switch
         {
-            Console.WriteLine($"[ERRO GLOBAL] {error.Error.Message}");
-            Console.WriteLine(error.Error.StackTrace);
-            context.Response.StatusCode = 500;
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(
-                System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    erro = error.Error.Message
-                })
-            );
-        }
+            KeyNotFoundException    => (StatusCodes.Status404NotFound,    error.Error.Message),
+            ArgumentException       => (StatusCodes.Status400BadRequest,  error.Error.Message),
+            UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, error.Error.Message),
+            _                       => (StatusCodes.Status500InternalServerError, "Erro interno do servidor.")
+        };
+
+        context.Response.StatusCode  = status;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync(
+            System.Text.Json.JsonSerializer.Serialize(new { erro = mensagem }));
     });
 });
 
-// 2. Middleware customizado (remova se já estiver tratando no ExceptionHandler acima)
-// app.UseMiddleware<ExceptionMiddleware>(); ← comentar por enquanto para não conflitar
-
-// 3. Swagger
+// 2. Swagger UI
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// 4. CORS antes de tudo que processa requisições
+// 3. CORS
 app.UseCors("SmartParkPolicy");
 
-// 5. HTTPS
+// 4. HTTPS Redirect
 app.UseHttpsRedirection();
 
-// 6. Auth
+// 5. Auth
 app.UseAuthorization();
 
-// 7. Controllers
+// 6. Controllers
 app.MapControllers();
 
 app.Run();

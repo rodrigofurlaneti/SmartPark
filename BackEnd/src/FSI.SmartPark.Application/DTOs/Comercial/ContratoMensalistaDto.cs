@@ -1,12 +1,13 @@
 namespace FSI.SmartPark.Application.DTOs.Comercial;
 
 public record ContratoMensalistaRequestDto(
-    int ClienteId,
-    int UnidadeId,
+    int     ClienteId,
+    int     UnidadeId,
     decimal Valor,
-    int NumeroVagas,
-    string HorarioInicio,
-    string HorarioFim
+    int     EmpresaId,
+    int     NumeroVagas  = 1,
+    string? HorarioInicio = null,
+    string? HorarioFim    = null
 );
 
 public record ContratoMensalistaResponseDto(

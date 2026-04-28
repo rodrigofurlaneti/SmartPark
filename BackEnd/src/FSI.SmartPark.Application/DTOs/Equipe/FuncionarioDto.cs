@@ -2,11 +2,12 @@ using FSI.SmartPark.Domain.Enums;
 namespace FSI.SmartPark.Application.DTOs.Equipe;
 
 public record FuncionarioRequestDto(
-    int PessoaId,
-    decimal Salario,
+    int                  PessoaId,
+    decimal              Salario,
     TipoEscalaFuncionario Escala,
-    int? CargoId = null,
-    int? UnidadeId = null
+    int                  EmpresaId,
+    int?                 CargoId   = null,
+    int?                 UnidadeId = null
 );
 
 public record FuncionarioResponseDto(

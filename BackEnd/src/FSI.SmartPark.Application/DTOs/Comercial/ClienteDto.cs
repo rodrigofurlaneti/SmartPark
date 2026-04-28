@@ -3,14 +3,16 @@ namespace FSI.SmartPark.Application.DTOs.Comercial;
 public record ClienteRequestDto(
     string Nome,
     string Documento,
-    bool IsMensalista
+    bool   IsMensalista,
+    int    EmpresaId
 );
 
 public record ClienteResponseDto(
-    int Id,
-    string Nome,
-    string DocumentoNumero,
-    bool IsMensalista,
-    bool Ativo,
+    int      Id,
+    string   Nome,
+    string   DocumentoNumero,
+    bool     IsMensalista,
+    bool     Ativo,
+    int      EmpresaId,
     DateTime DataInsercao
 );

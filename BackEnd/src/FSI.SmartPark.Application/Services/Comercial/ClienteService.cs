@@ -14,59 +14,59 @@ public class ClienteService : IClienteService
 
     public async Task<ClienteResponseDto> Criar(ClienteRequestDto dto)
     {
-        Cliente cliente;
-        if (dto.Documento.Length == 11)
-            cliente = new Cliente(dto.Nome, new Cpf(dto.Documento), dto.IsMensalista);
-        else
-            cliente = new Cliente(dto.Nome, new Cnpj(dto.Documento), dto.IsMensalista);
+        Cliente cliente = dto.Documento.Length == 11
+            ? new Cliente(dto.Nome, new Cpf(dto.Documento), dto.IsMensalista, dto.EmpresaId)
+            : new Cliente(dto.Nome, new Cnpj(dto.Documento), dto.IsMensalista, dto.EmpresaId);
 
-        var id = await _repo.Inserir(cliente);
-        var criado = await _repo.ObterPorId(id);
+        var id     = await _repo.Add(cliente);
+        var criado = await _repo.GetById(id);
         return ToDto(criado!);
     }
 
     public async Task<ClienteResponseDto> Atualizar(int id, ClienteRequestDto dto)
     {
-        var cliente = await _repo.ObterPorId(id)
+        var cliente = await _repo.GetById(id)
             ?? throw new KeyNotFoundException($"Cliente {id} não encontrado.");
+
         cliente.AlterarStatus(true);
-        await _repo.Atualizar(cliente);
+        await _repo.Update(cliente);
         return ToDto(cliente);
     }
 
     public async Task<ClienteResponseDto?> ObterPorId(int id)
     {
-        var c = await _repo.ObterPorId(id);
+        var c = await _repo.GetById(id);
         return c is null ? null : ToDto(c);
     }
 
     public async Task<ClienteResponseDto?> ObterPorDocumento(string documento)
     {
-        var lista = await _repo.ListarTodos();
-        var c = lista.FirstOrDefault(x => x.DocumentoNumero == documento.Replace(".", "").Replace("-", "").Replace("/", ""));
+        var lista = await _repo.GetAll();
+        var docLimpo = documento.Replace(".", "").Replace("-", "").Replace("/", "");
+        var c = lista.FirstOrDefault(x => x.DocumentoNumero == docLimpo);
         return c is null ? null : ToDto(c);
     }
 
     public async Task<IEnumerable<ClienteResponseDto>> ListarMensalistas()
     {
-        var lista = await _repo.ListarTodos();
+        var lista = await _repo.GetAll();
         return lista.Where(c => c.IsMensalista && c.Ativo).Select(ToDto);
     }
 
     public async Task<IEnumerable<ClienteResponseDto>> ListarTodos()
     {
-        var lista = await _repo.ListarTodos();
+        var lista = await _repo.GetAll();
         return lista.Select(ToDto);
     }
 
     public async Task Inativar(int id)
     {
-        var c = await _repo.ObterPorId(id)
+        var c = await _repo.GetById(id)
             ?? throw new KeyNotFoundException($"Cliente {id} não encontrado.");
         c.AlterarStatus(false);
-        await _repo.Atualizar(c);
+        await _repo.Update(c);
     }
 
     private static ClienteResponseDto ToDto(Cliente c) => new(
-        c.Id, c.Nome, c.DocumentoNumero, c.IsMensalista, c.Ativo, c.DataInsercao);
+        c.Id, c.Nome, c.DocumentoNumero, c.IsMensalista, c.Ativo, c.Empresa_Id, c.DataInsercao);
 }

@@ -3,8 +3,9 @@ namespace FSI.SmartPark.Application.DTOs.Suporte;
 public record UsuarioRequestDto(
     string Login,
     string Senha,
-    int? UnidadeId = null,
-    int? FuncionarioId = null
+    int    EmpresaId,
+    int?   UnidadeId     = null,
+    int?   FuncionarioId = null
 );
 
 public record UsuarioLoginDto(

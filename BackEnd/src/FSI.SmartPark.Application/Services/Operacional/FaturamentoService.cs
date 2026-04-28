@@ -13,29 +13,29 @@ public class FaturamentoService : IFaturamentoService
 
     public async Task<FaturamentoResponseDto> AbrirTurno(AbrirTurnoRequestDto dto)
     {
-        var fat = new Faturamento(dto.NumFechamento, dto.NumTerminal, dto.UnidadeId, dto.UsuarioId);
+        var fat = new Faturamento(dto.NumFechamento, dto.NumTerminal, dto.UnidadeId, dto.UsuarioId, dto.EmpresaId);
         fat.DefinirSaldoInicial(dto.SaldoInicial);
-        var id = await _repo.Inserir(fat);
-        var criado = await _repo.ObterPorId(id);
+        var id     = await _repo.Add(fat);
+        var criado = await _repo.GetById(id);
         return ToDto(criado!);
     }
 
     public async Task<FaturamentoResponseDto> FecharTurno(FecharTurnoRequestDto dto)
     {
-        var fat = await _repo.ObterPorId(dto.FaturamentoId)
+        var fat = await _repo.GetById(dto.FaturamentoId)
             ?? throw new KeyNotFoundException($"Faturamento {dto.FaturamentoId} não encontrado.");
 
         fat.FecharTurno(dto.ValorTotal, dto.ValorDinheiro, dto.ValorCartaoDebito,
             dto.ValorCartaoCredito, dto.ValorRotativo, dto.ValorMensalidade,
             dto.ValorSemParar, dto.ValorSeloDesconto, dto.TicketFinal);
 
-        await _repo.Atualizar(fat);
+        await _repo.Update(fat);
         return ToDto(fat);
     }
 
     public async Task<FaturamentoResponseDto?> ObterPorId(int id)
     {
-        var fat = await _repo.ObterPorId(id);
+        var fat = await _repo.GetById(id);
         return fat is null ? null : ToDto(fat);
     }
 
@@ -47,10 +47,10 @@ public class FaturamentoService : IFaturamentoService
 
     public async Task RegistrarSangria(int faturamentoId, decimal valor)
     {
-        var fat = await _repo.ObterPorId(faturamentoId)
+        var fat = await _repo.GetById(faturamentoId)
             ?? throw new KeyNotFoundException($"Faturamento {faturamentoId} não encontrado.");
         fat.RegistrarSangria(valor);
-        await _repo.Atualizar(fat);
+        await _repo.Update(fat);
     }
 
     private static FaturamentoResponseDto ToDto(Faturamento f) => new(

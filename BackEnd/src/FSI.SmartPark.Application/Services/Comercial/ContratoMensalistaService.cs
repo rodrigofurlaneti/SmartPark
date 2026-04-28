@@ -13,44 +13,44 @@ public class ContratoMensalistaService : IContratoMensalistaService
 
     public async Task<ContratoMensalistaResponseDto> Criar(ContratoMensalistaRequestDto dto)
     {
-        var contrato = new ContratoMensalista(dto.ClienteId, dto.UnidadeId, dto.Valor);
-        var id = await _repo.Inserir(contrato);
-        var criado = await _repo.ObterPorId(id);
+        var contrato = new ContratoMensalista(dto.ClienteId, dto.UnidadeId, dto.Valor, dto.EmpresaId);
+        var id       = await _repo.Add(contrato);
+        var criado   = await _repo.GetById(id);
         return ToDto(criado!);
     }
 
     public async Task<ContratoMensalistaResponseDto?> ObterPorId(int id)
     {
-        var c = await _repo.ObterPorId(id);
+        var c = await _repo.GetById(id);
         return c is null ? null : ToDto(c);
     }
 
     public async Task<IEnumerable<ContratoMensalistaResponseDto>> ListarPorCliente(int clienteId)
     {
-        var lista = await _repo.ListarTodos();
+        var lista = await _repo.GetAll();
         return lista.Where(c => c.Cliente_Id == clienteId).Select(ToDto);
     }
 
     public async Task<IEnumerable<ContratoMensalistaResponseDto>> ListarPorUnidade(int unidadeId)
     {
-        var lista = await _repo.ListarTodos();
+        var lista = await _repo.GetAll();
         return lista.Where(c => c.Unidade_Id == unidadeId).Select(ToDto);
     }
 
     public async Task Renovar(int id)
     {
-        var c = await _repo.ObterPorId(id)
+        var c = await _repo.GetById(id)
             ?? throw new KeyNotFoundException($"Contrato {id} não encontrado.");
         c.RenovarContrato();
-        await _repo.Atualizar(c);
+        await _repo.Update(c);
     }
 
     public async Task Bloquear(int id)
     {
-        var c = await _repo.ObterPorId(id)
+        var c = await _repo.GetById(id)
             ?? throw new KeyNotFoundException($"Contrato {id} não encontrado.");
         c.BloquearContrato();
-        await _repo.Atualizar(c);
+        await _repo.Update(c);
     }
 
     private static ContratoMensalistaResponseDto ToDto(ContratoMensalista c) => new(

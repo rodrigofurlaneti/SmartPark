@@ -2,11 +2,12 @@ using FSI.SmartPark.Domain.Enums;
 namespace FSI.SmartPark.Application.DTOs.Financeiro;
 
 public record ContasAPagarRequestDto(
-    string NumeroDocumento,
+    string   NumeroDocumento,
     DateTime DataVencimento,
-    decimal ValorTotal,
-    int? FornecedorId = null,
-    int? UnidadeId = null
+    decimal  ValorTotal,
+    int      EmpresaId,
+    int?     FornecedorId = null,
+    int?     UnidadeId    = null
 );
 
 public record ContasAPagarResponseDto(

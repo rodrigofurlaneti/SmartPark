@@ -13,19 +13,19 @@ public class MovimentacaoService : IMovimentacaoService
 
     public async Task<MovimentacaoResponseDto> RegistrarEntrada(EntradaVeiculoRequestDto dto)
     {
-        var mov = new Movimentacao(dto.Placa, dto.UnidadeId);
+        var mov = new Movimentacao(dto.Placa, dto.UnidadeId, dto.EmpresaId);
 
         if (dto.ClienteId.HasValue)
             mov.VincularCliente(dto.ClienteId.Value, dto.NumeroContrato);
 
-        var id = await _repo.Inserir(mov);
-        var criado = await _repo.ObterPorId(id);
+        var id     = await _repo.Add(mov);
+        var criado = await _repo.GetById(id);
         return ToDto(criado!);
     }
 
     public async Task<MovimentacaoResponseDto> RegistrarSaida(SaidaVeiculoRequestDto dto)
     {
-        var mov = await _repo.ObterPorId(dto.MovimentacaoId)
+        var mov = await _repo.GetById(dto.MovimentacaoId)
             ?? throw new KeyNotFoundException($"Movimentação {dto.MovimentacaoId} não encontrada.");
 
         mov.RegistrarSaida(dto.ValorCobrado, dto.FormaPagamento);
@@ -33,19 +33,20 @@ public class MovimentacaoService : IMovimentacaoService
         if (dto.CpfParaNF is not null)
             mov.InformarCpfParaNF(dto.CpfParaNF);
 
+        // Método especializado permanece no repositório concreto
         await _repo.RegistrarSaida(dto.MovimentacaoId, dto.ValorCobrado);
         return ToDto(mov);
     }
 
     public async Task<MovimentacaoResponseDto?> ObterPorId(int id)
     {
-        var mov = await _repo.ObterPorId(id);
+        var mov = await _repo.GetById(id);
         return mov is null ? null : ToDto(mov);
     }
 
     public async Task<IEnumerable<MovimentacaoResponseDto>> ListarAbertas(int unidadeId)
     {
-        var lista = await _repo.ListarTodos();
+        var lista = await _repo.GetAll();
         return lista
             .Where(m => m.Unidade_Id == unidadeId && !m.DataSaida.HasValue)
             .Select(ToDto);

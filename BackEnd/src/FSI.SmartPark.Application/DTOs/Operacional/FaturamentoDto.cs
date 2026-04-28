@@ -1,10 +1,11 @@
 namespace FSI.SmartPark.Application.DTOs.Operacional;
 
 public record AbrirTurnoRequestDto(
-    int NumFechamento,
-    int NumTerminal,
-    int UnidadeId,
-    int UsuarioId,
+    int     NumFechamento,
+    int     NumTerminal,
+    int     UnidadeId,
+    int     UsuarioId,
+    int     EmpresaId,
     decimal SaldoInicial
 );
 

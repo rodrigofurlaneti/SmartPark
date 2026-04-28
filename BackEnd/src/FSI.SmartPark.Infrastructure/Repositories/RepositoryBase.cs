@@ -1,18 +1,34 @@
 using Dapper;
+using FSI.SmartPark.Domain.Entities;
 using FSI.SmartPark.Domain.Interfaces;
 using FSI.SmartPark.Infrastructure.Data;
 
 namespace FSI.SmartPark.Infrastructure.Repositories;
 
+/// <summary>
+/// Implementação genérica do Generic Repository Pattern com Dapper + MySQL.
+///
+/// Padrões aplicados:
+///   ✅ Soft Delete — Delete() atualiza IsDeleted=1 e DeletedAt; nunca remove o registro.
+///   ✅ Filtro automático — GetById/GetAll/GetAllByEmpresa ignoram IsDeleted=1.
+///   ✅ Async/Await — CancellationToken propagado em todas as operações.
+///   ✅ Isolamento multi-tenant — GetAllByEmpresa filtra por Empresa_Id.
+/// </summary>
 public abstract class RepositoryBase<TEntity> : IRepositoryBase<TEntity>
     where TEntity : class
 {
     protected readonly SmartParkDbContext _ctx;
+
+    /// <summary>Nome da tabela no schema SmartPark (ex: "Unidade", "Cliente").</summary>
     protected abstract string Tabela { get; }
 
     protected RepositoryBase(SmartParkDbContext ctx) => _ctx = ctx;
 
-    public virtual async Task<int> Inserir(TEntity entity)
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  ADD  — INSERT INTO
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    public virtual async Task<int> Add(TEntity entity, CancellationToken ct = default)
     {
         using var conn = _ctx.CreateConnection();
         try
@@ -22,180 +38,183 @@ public abstract class RepositoryBase<TEntity> : IRepositoryBase<TEntity>
                 .Where(p =>
                     p.Name != "Id" &&
                     p.Name != "DataInsercao" &&
-                    p.CanWrite &&
-                    p.CanRead &&
+                    p.CanWrite && p.CanRead &&
+                    p.GetValue(entity) != null &&
                     !(p.PropertyType == typeof(DateTime) &&
                       (DateTime)p.GetValue(entity)! == DateTime.MinValue) &&
                     !(p.PropertyType == typeof(DateTime?) &&
-                      ((DateTime?)p.GetValue(entity) is null ||
-                       (DateTime?)p.GetValue(entity) == DateTime.MinValue)) &&
-                    p.GetValue(entity) != null
-                )
+                      ((DateTime?)p.GetValue(entity)) == DateTime.MinValue))
                 .ToList();
 
             if (!props.Any())
                 throw new InvalidOperationException($"Nenhuma propriedade válida para inserção em {Tabela}.");
 
-            // ✅ DynamicParameters — passa só os campos filtrados
             var parameters = new DynamicParameters();
             foreach (var p in props)
                 parameters.Add(p.Name, p.GetValue(entity));
 
             var colunas = string.Join(", ", props.Select(p => p.Name));
-            var params_ = string.Join(", ", props.Select(p => $"@{p.Name}"));
-            var sql = $"INSERT INTO SmartPark.{Tabela} ({colunas}) VALUES ({params_}); SELECT LAST_INSERT_ID();";
+            var valores = string.Join(", ", props.Select(p => $"@{p.Name}"));
+            var sql     = $"INSERT INTO SmartPark.{Tabela} ({colunas}) VALUES ({valores}); SELECT LAST_INSERT_ID();";
 
-            Console.WriteLine($"[SQL] Inserir em {Tabela}: {sql}");
-            foreach (var p in props)
-                Console.WriteLine($"[SQL]   {p.Name} = {p.GetValue(entity)}");
-
-            var id = await conn.ExecuteScalarAsync<int>(sql, parameters); // ✅ passa parameters
+            var id = await conn.ExecuteScalarAsync<int>(new CommandDefinition(sql, parameters, cancellationToken: ct));
 
             if (id <= 0)
                 throw new InvalidOperationException($"Inserção em {Tabela} não retornou Id válido.");
 
-            Console.WriteLine($"[SQL] Inserido com Id = {id}");
             return id;
         }
         catch (MySqlConnector.MySqlException ex)
         {
-            Console.WriteLine($"[ERRO SQL] Tabela: {Tabela} | Código: {ex.ErrorCode} | {ex.Message}");
-            var mensagem = ex.ErrorCode switch
+            var msg = ex.ErrorCode switch
             {
-                MySqlConnector.MySqlErrorCode.DuplicateKeyEntry => $"Registro duplicado em {Tabela}.",
-                MySqlConnector.MySqlErrorCode.NoReferencedRow2 => $"Chave estrangeira inválida em {Tabela}.",
+                MySqlConnector.MySqlErrorCode.DuplicateKeyEntry  => $"Registro duplicado em {Tabela}.",
+                MySqlConnector.MySqlErrorCode.NoReferencedRow2   => $"Chave estrangeira inválida em {Tabela}.",
                 MySqlConnector.MySqlErrorCode.ColumnCannotBeNull => $"Campo obrigatório nulo em {Tabela}.",
-                MySqlConnector.MySqlErrorCode.DataTooLong => $"Valor muito longo em {Tabela}.",
-                _ => $"Erro de banco em {Tabela}: {ex.Message}"
+                MySqlConnector.MySqlErrorCode.DataTooLong        => $"Valor muito longo em {Tabela}.",
+                _                                                 => $"Erro de banco em {Tabela}: {ex.Message}"
             };
-            throw new InvalidOperationException(mensagem, ex);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ERRO] Inserir - Tabela: {Tabela} | {ex.Message}");
-            throw;
+            throw new InvalidOperationException(msg, ex);
         }
     }
 
-    public virtual async Task<bool> Excluir(int id)
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  UPDATE  — UPDATE SET
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    public virtual async Task<bool> Update(TEntity entity, CancellationToken ct = default)
     {
+        using var conn = _ctx.CreateConnection();
         try
         {
-            if (id <= 0) throw new ArgumentException($"Id inválido: {id}");
-
-            using var conn = _ctx.CreateConnection();
-            var rows = await conn.ExecuteAsync(
-                $"DELETE FROM SmartPark.{Tabela} WHERE Id = @id", new { id });
-
-            if (rows == 0)
-                throw new KeyNotFoundException($"{typeof(TEntity).Name} com Id {id} não encontrado para exclusão.");
-
-            Console.WriteLine($"[SQL] Excluir - {Tabela} | Id = {id} | OK");
-            return true;
-        }
-        catch (KeyNotFoundException) { throw; }
-        catch (MySqlConnector.MySqlException ex)
-        {
-            Console.WriteLine($"[ERRO SQL] Excluir - Tabela: {Tabela} | Id: {id} | {ex.ErrorCode} | {ex.Message}");
-            throw new InvalidOperationException($"Erro ao excluir {typeof(TEntity).Name}: {ex.Message}", ex);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ERRO] Excluir - Tabela: {Tabela} | Id: {id} | {ex.Message}");
-            throw;
-        }
-    }
-
-    public virtual async Task<bool> Atualizar(TEntity entity)
-    {
-        try
-        {
-            using var conn = _ctx.CreateConnection();
             var props = typeof(TEntity)
                 .GetProperties()
                 .Where(p => p.Name != "Id" && p.Name != "DataInsercao" && p.CanWrite && p.CanRead)
                 .ToList();
 
             var sets = string.Join(", ", props.Select(p => $"{p.Name} = @{p.Name}"));
-            var sql = $"UPDATE SmartPark.{Tabela} SET {sets} WHERE Id = @Id";
+            var sql  = $"UPDATE SmartPark.{Tabela} SET {sets} WHERE Id = @Id AND IsDeleted = 0";
 
-            Console.WriteLine($"[SQL] Atualizar - {Tabela}: {sql}");
-
-            var rows = await conn.ExecuteAsync(sql, entity);
+            var rows = await conn.ExecuteAsync(new CommandDefinition(sql, entity, cancellationToken: ct));
 
             if (rows == 0)
-                throw new KeyNotFoundException($"{typeof(TEntity).Name} não encontrado para atualização.");
+                throw new KeyNotFoundException($"{typeof(TEntity).Name} não encontrado ou já excluído.");
 
             return true;
         }
         catch (KeyNotFoundException) { throw; }
         catch (MySqlConnector.MySqlException ex)
         {
-            Console.WriteLine($"[ERRO SQL] Atualizar - Tabela: {Tabela} | {ex.ErrorCode} | {ex.Message}");
-
-            var mensagem = ex.ErrorCode switch
+            var msg = ex.ErrorCode switch
             {
-                MySqlConnector.MySqlErrorCode.DuplicateKeyEntry => $"Registro duplicado em {Tabela}.",
-                MySqlConnector.MySqlErrorCode.NoReferencedRow2 => $"Chave estrangeira inválida em {Tabela}.",
+                MySqlConnector.MySqlErrorCode.DuplicateKeyEntry  => $"Registro duplicado em {Tabela}.",
+                MySqlConnector.MySqlErrorCode.NoReferencedRow2   => $"Chave estrangeira inválida em {Tabela}.",
                 MySqlConnector.MySqlErrorCode.ColumnCannotBeNull => $"Campo obrigatório nulo em {Tabela}.",
-                _ => $"Erro ao atualizar {Tabela}: {ex.Message}"
+                _                                                 => $"Erro ao atualizar {Tabela}: {ex.Message}"
             };
-
-            throw new InvalidOperationException(mensagem, ex);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ERRO] Atualizar - Tabela: {Tabela} | {ex.Message}");
-            throw;
+            throw new InvalidOperationException(msg, ex);
         }
     }
 
-    public virtual async Task<TEntity> ObterPorId(int id)
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  DELETE  — SOFT DELETE (IsDeleted = 1, DeletedAt = UTC_TIMESTAMP())
+    //  ❌ Nunca executa DELETE físico — apenas marca o registro como inativo.
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    public virtual async Task<bool> Delete(int id, CancellationToken ct = default)
     {
+        if (id <= 0) throw new ArgumentException($"Id inválido: {id}", nameof(id));
+
+        using var conn = _ctx.CreateConnection();
         try
         {
-            if (id <= 0)
-                throw new ArgumentException($"Id inválido: {id}");
+            const string sql = @"
+                UPDATE SmartPark.{0}
+                   SET IsDeleted = 1,
+                       DeletedAt = UTC_TIMESTAMP()
+                 WHERE Id = @id
+                   AND IsDeleted = 0";
 
-            using var conn = _ctx.CreateConnection();
-            var resultado = await conn.QueryFirstOrDefaultAsync<TEntity>(
-                $"SELECT * FROM SmartPark.{Tabela} WHERE Id = @id", new { id });
+            var rows = await conn.ExecuteAsync(
+                new CommandDefinition(string.Format(sql, Tabela), new { id }, cancellationToken: ct));
 
-            if (resultado is null)
-                throw new KeyNotFoundException($"{typeof(TEntity).Name} com Id {id} não encontrado em {Tabela}.");
+            if (rows == 0)
+                throw new KeyNotFoundException(
+                    $"{typeof(TEntity).Name} com Id {id} não encontrado ou já excluído em {Tabela}.");
 
-            Console.WriteLine($"[SQL] ObterPorId - {Tabela} | Id = {id} | Encontrado");
-            return resultado;
+            return true;
         }
-        catch (KeyNotFoundException)
+        catch (KeyNotFoundException) { throw; }
+        catch (MySqlConnector.MySqlException ex)
         {
-            throw; // repassa sem logar — é esperado
+            throw new InvalidOperationException(
+                $"Erro ao excluir (soft delete) {typeof(TEntity).Name} Id {id}: {ex.Message}", ex);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  GET BY ID  — filtra IsDeleted = 0
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    public virtual async Task<TEntity?> GetById(int id, CancellationToken ct = default)
+    {
+        if (id <= 0) throw new ArgumentException($"Id inválido: {id}", nameof(id));
+
+        using var conn = _ctx.CreateConnection();
+        try
+        {
+            var sql = $"SELECT * FROM SmartPark.{Tabela} WHERE Id = @id AND IsDeleted = 0";
+
+            return await conn.QueryFirstOrDefaultAsync<TEntity>(
+                new CommandDefinition(sql, new { id }, cancellationToken: ct));
         }
         catch (MySqlConnector.MySqlException ex)
         {
-            Console.WriteLine($"[ERRO SQL] ObterPorId - Tabela: {Tabela} | Id: {id} | Código: {ex.ErrorCode} | {ex.Message}");
-            throw new InvalidOperationException($"Erro ao buscar {typeof(TEntity).Name} com Id {id}: {ex.Message}", ex);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ERRO] ObterPorId - Tabela: {Tabela} | Id: {id} | {ex.Message}");
-            throw;
+            throw new InvalidOperationException(
+                $"Erro ao buscar {typeof(TEntity).Name} Id {id} em {Tabela}: {ex.Message}", ex);
         }
     }
 
-    public virtual async Task<IEnumerable<TEntity>> ListarTodos()
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  GET ALL  — filtra IsDeleted = 0
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    public virtual async Task<IEnumerable<TEntity>> GetAll(CancellationToken ct = default)
     {
+        using var conn = _ctx.CreateConnection();
         try
         {
-            using var conn = _ctx.CreateConnection();
-            var resultado = await conn.QueryAsync<TEntity>($"SELECT * FROM SmartPark.{Tabela}");
-            return resultado;
+            var sql = $"SELECT * FROM SmartPark.{Tabela} WHERE IsDeleted = 0";
+
+            return await conn.QueryAsync<TEntity>(
+                new CommandDefinition(sql, cancellationToken: ct));
         }
         catch (Exception ex)
         {
-            // Troque pelo seu logger
-            Console.WriteLine($"[ERRO] ListarTodos - Tabela: {Tabela} | {ex.Message}");
-            throw;
+            throw new InvalidOperationException($"Erro ao listar {Tabela}: {ex.Message}", ex);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    //  GET ALL BY EMPRESA  — isolamento multi-tenant + IsDeleted = 0
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    public virtual async Task<IEnumerable<TEntity>> GetAllByEmpresa(int empresaId, CancellationToken ct = default)
+    {
+        if (empresaId <= 0) throw new ArgumentException($"EmpresaId inválido: {empresaId}", nameof(empresaId));
+
+        using var conn = _ctx.CreateConnection();
+        try
+        {
+            var sql = $"SELECT * FROM SmartPark.{Tabela} WHERE Empresa_Id = @empresaId AND IsDeleted = 0";
+
+            return await conn.QueryAsync<TEntity>(
+                new CommandDefinition(sql, new { empresaId }, cancellationToken: ct));
+        }
+        catch (MySqlConnector.MySqlException ex)
+        {
+            throw new InvalidOperationException(
+                $"Erro ao listar {Tabela} por EmpresaId {empresaId}: {ex.Message}", ex);
         }
     }
 }

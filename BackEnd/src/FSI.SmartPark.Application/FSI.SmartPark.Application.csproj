@@ -7,4 +7,10 @@
   <ItemGroup>
     <ProjectReference Include="..\FSI.SmartPark.Domain\FSI.SmartPark.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- CQRS via MediatR -->
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <!-- Validação de Commands/Queries -->
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+  </ItemGroup>
 </Project>

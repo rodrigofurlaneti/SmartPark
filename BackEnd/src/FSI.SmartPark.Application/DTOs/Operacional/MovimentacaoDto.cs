@@ -1,10 +1,11 @@
 namespace FSI.SmartPark.Application.DTOs.Operacional;
 
 public record EntradaVeiculoRequestDto(
-    string Placa,
-    int UnidadeId,
-    int? UsuarioId = null,
-    int? ClienteId = null,
+    string  Placa,
+    int     UnidadeId,
+    int     EmpresaId,
+    int?    UsuarioId      = null,
+    int?    ClienteId      = null,
     string? NumeroContrato = null
 );
 

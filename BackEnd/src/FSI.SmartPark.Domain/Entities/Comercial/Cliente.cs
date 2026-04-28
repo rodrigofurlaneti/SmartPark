@@ -1,38 +1,47 @@
-﻿using FSI.SmartPark.Domain.ValueObjects;
+using FSI.SmartPark.Domain.ValueObjects;
 
 namespace FSI.SmartPark.Domain.Entities.Comercial
 {
     public class Cliente : EntityBase
     {
-        public string Nome { get; private set; }
-        public string DocumentoNumero { get; private set; }
-        public bool IsMensalista { get; private set; }
-        public bool Ativo { get; private set; }
-
         // Construtor protegido para o Dapper
         protected Cliente() { }
 
-        // Construtor usando Cpf (Exemplo para Mensalista Pessoa Física)
-        public Cliente(string nome, Cpf cpf, bool isMensalista)
+        public Cliente(string nome, Cpf cpf, bool isMensalista, int empresaId)
         {
-            if (string.IsNullOrWhiteSpace(nome)) throw new ArgumentException("Nome é obrigatório");
+            if (string.IsNullOrWhiteSpace(nome))
+                throw new ArgumentException("Nome é obrigatório.", nameof(nome));
+            if (empresaId <= 0)
+                throw new ArgumentException("EmpresaId é obrigatório.", nameof(empresaId));
 
-            Nome = nome;
-            DocumentoNumero = cpf.Numero; // Extrai o valor já validado pelo VO
-            IsMensalista = isMensalista;
-            Ativo = true;
+            Nome            = nome;
+            DocumentoNumero = cpf.Numero;
+            IsMensalista    = isMensalista;
+            Ativo           = true;
+            Empresa_Id      = empresaId;
         }
 
-        // Sobrecarga de construtor para Pessoa Jurídica (Empresas/Convênios)
-        public Cliente(string nome, Cnpj cnpj, bool isMensalista)
+        public Cliente(string nome, Cnpj cnpj, bool isMensalista, int empresaId)
         {
-            if (string.IsNullOrWhiteSpace(nome)) throw new ArgumentException("Nome é obrigatório");
+            if (string.IsNullOrWhiteSpace(nome))
+                throw new ArgumentException("Nome é obrigatório.", nameof(nome));
+            if (empresaId <= 0)
+                throw new ArgumentException("EmpresaId é obrigatório.", nameof(empresaId));
 
-            Nome = nome;
-            DocumentoNumero = cnpj.Numero; // Extrai o valor já validado pelo VO
-            IsMensalista = isMensalista;
-            Ativo = true;
+            Nome            = nome;
+            DocumentoNumero = cnpj.Numero;
+            IsMensalista    = isMensalista;
+            Ativo           = true;
+            Empresa_Id      = empresaId;
         }
+
+        public string  Nome            { get; private set; } = string.Empty;
+        public string  DocumentoNumero { get; private set; } = string.Empty;
+        public bool    IsMensalista    { get; private set; }
+        public bool    Ativo           { get; private set; }
+
+        /// <summary>Tenant — isola o cliente ao contexto da empresa contratante.</summary>
+        public int Empresa_Id { get; private set; }
 
         public void AlterarStatus(bool novoStatus) => Ativo = novoStatus;
     }

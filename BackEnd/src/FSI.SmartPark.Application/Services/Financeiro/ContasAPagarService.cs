@@ -14,37 +14,36 @@ public class ContasAPagarService : IContasAPagarService
 
     public async Task<ContasAPagarResponseDto> Criar(ContasAPagarRequestDto dto)
     {
-        var conta = new ContasAPagar(dto.NumeroDocumento, dto.DataVencimento, dto.ValorTotal);
-        var id = await _repo.Inserir(conta);
-        var criada = await _repo.ObterPorId(id);
+        var conta  = new ContasAPagar(dto.NumeroDocumento, dto.DataVencimento, dto.ValorTotal, dto.EmpresaId);
+        var id     = await _repo.Add(conta);
+        var criada = await _repo.GetById(id);
         return ToDto(criada!);
     }
 
     public async Task<ContasAPagarResponseDto?> ObterPorId(int id)
     {
-        var c = await _repo.ObterPorId(id);
+        var c = await _repo.GetById(id);
         return c is null ? null : ToDto(c);
     }
 
     public async Task<IEnumerable<ContasAPagarResponseDto>> ListarPorUnidade(int unidadeId)
     {
-        var lista = await _repo.ListarTodos();
+        var lista = await _repo.GetAll();
         return lista.Where(c => c.Unidade_Id == unidadeId).Select(ToDto);
     }
 
     public async Task<IEnumerable<ContasAPagarResponseDto>> ListarEmAberto()
     {
-        var lista = await _repo.ListarTodos();
-        // StatusConta é int no domínio: 1 = Aberto
+        var lista = await _repo.GetAll();
         return lista.Where(c => c.StatusConta == (int)StatusContasAPagar.Aberto).Select(ToDto);
     }
 
     public async Task Pagar(int id)
     {
-        var c = await _repo.ObterPorId(id)
+        var c = await _repo.GetById(id)
             ?? throw new KeyNotFoundException($"Conta a pagar {id} não encontrada.");
         c.Pagar();
-        await _repo.Atualizar(c);
+        await _repo.Update(c);
     }
 
     private static ContasAPagarResponseDto ToDto(ContasAPagar c) => new(
@@ -52,7 +51,7 @@ public class ContasAPagarService : IContasAPagarService
         c.NumeroDocumento,
         c.DataVencimento,
         c.ValorTotal,
-        (StatusContasAPagar)c.StatusConta,   // cast int → enum para o DTO
+        (StatusContasAPagar)c.StatusConta,
         c.Fornecedor_Id,
         c.Unidade_Id);
 }

@@ -13,44 +13,44 @@ public class FuncionarioService : IFuncionarioService
 
     public async Task<FuncionarioResponseDto> Criar(FuncionarioRequestDto dto)
     {
-        var func = new Funcionario(dto.PessoaId, dto.Salario, dto.Escala);
-        var id = await _repo.Inserir(func);
-        var criado = await _repo.ObterPorId(id);
+        var func   = new Funcionario(dto.PessoaId, dto.Salario, dto.Escala, dto.EmpresaId);
+        var id     = await _repo.Add(func);
+        var criado = await _repo.GetById(id);
         return ToDto(criado!);
     }
 
     public async Task<FuncionarioResponseDto?> ObterPorId(int id)
     {
-        var f = await _repo.ObterPorId(id);
+        var f = await _repo.GetById(id);
         return f is null ? null : ToDto(f);
     }
 
     public async Task<IEnumerable<FuncionarioResponseDto>> ListarAtivos()
     {
-        var lista = await _repo.ListarTodos();
+        var lista = await _repo.GetAll();
         return lista.Where(f => f.Status == Domain.Enums.StatusFuncionario.Ativo).Select(ToDto);
     }
 
     public async Task<IEnumerable<FuncionarioResponseDto>> ListarPorUnidade(int unidadeId)
     {
-        var lista = await _repo.ListarTodos();
+        var lista = await _repo.GetAll();
         return lista.Where(f => f.Unidade_Id == unidadeId).Select(ToDto);
     }
 
     public async Task AlterarSalario(int id, decimal novoSalario)
     {
-        var f = await _repo.ObterPorId(id)
+        var f = await _repo.GetById(id)
             ?? throw new KeyNotFoundException($"Funcionário {id} não encontrado.");
         f.AlterarSalario(novoSalario);
-        await _repo.Atualizar(f);
+        await _repo.Update(f);
     }
 
     public async Task Desligar(int id)
     {
-        var f = await _repo.ObterPorId(id)
+        var f = await _repo.GetById(id)
             ?? throw new KeyNotFoundException($"Funcionário {id} não encontrado.");
         f.Desligar();
-        await _repo.Atualizar(f);
+        await _repo.Update(f);
     }
 
     private static FuncionarioResponseDto ToDto(Funcionario f) => new(

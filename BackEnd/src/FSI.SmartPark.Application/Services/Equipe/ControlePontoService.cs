@@ -13,15 +13,15 @@ public class ControlePontoService : IControlePontoService
 
     public async Task<ControlePontoResponseDto> RegistrarPonto(RegistrarPontoRequestDto dto)
     {
-        var ponto = new ControlePonto(dto.FuncionarioId, (int)dto.TipoRegistro);
-        var id = await _repo.Inserir(ponto);
-        var criado = await _repo.ObterPorId(id);
+        var ponto  = new ControlePonto(dto.FuncionarioId, (int)dto.TipoRegistro);
+        var id     = await _repo.Add(ponto);
+        var criado = await _repo.GetById(id);
         return ToDto(criado!);
     }
 
     public async Task<IEnumerable<ControlePontoResponseDto>> ListarPorFuncionario(int funcionarioId, DateTime data)
     {
-        var lista = await _repo.ListarTodos();
+        var lista = await _repo.GetAll();
         return lista
             .Where(p => p.Funcionario_Id == funcionarioId && p.DataRegistro.Date == data.Date)
             .Select(ToDto);

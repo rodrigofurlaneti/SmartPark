@@ -21,26 +21,26 @@ public class PedidoSeloService : IPedidoSeloService
         if (dto.ConvenioId.HasValue)
             pedido.VincularConvenio(dto.ConvenioId.Value);
 
-        var id = await _repo.Inserir(pedido);
-        var criado = await _repo.ObterPorId(id);
+        var id     = await _repo.Add(pedido);
+        var criado = await _repo.GetById(id);
         return ToDto(criado!);
     }
 
     public async Task<PedidoSeloResponseDto?> ObterPorId(int id)
     {
-        var p = await _repo.ObterPorId(id);
+        var p = await _repo.GetById(id);
         return p is null ? null : ToDto(p);
     }
 
     public async Task<IEnumerable<PedidoSeloResponseDto>> ListarPorCliente(int clienteId)
     {
-        var lista = await _repo.ListarTodos();
+        var lista = await _repo.GetAll();
         return lista.Where(p => p.Cliente_Id == clienteId).Select(ToDto);
     }
 
     public async Task<IEnumerable<PedidoSeloResponseDto>> ListarPendentes(int unidadeId)
     {
-        var lista = await _repo.ListarTodos();
+        var lista = await _repo.GetAll();
         return lista
             .Where(p => p.Unidade_Id == unidadeId && p.StatusPedido == Domain.Enums.StatusPedidoSelo.Pendente)
             .Select(ToDto);
@@ -48,10 +48,10 @@ public class PedidoSeloService : IPedidoSeloService
 
     public async Task Cancelar(int id)
     {
-        var p = await _repo.ObterPorId(id)
+        var p = await _repo.GetById(id)
             ?? throw new KeyNotFoundException($"Pedido de selo {id} não encontrado.");
         p.Cancelar();
-        await _repo.Atualizar(p);
+        await _repo.Update(p);
     }
 
     private static PedidoSeloResponseDto ToDto(PedidoSelo p) => new(
