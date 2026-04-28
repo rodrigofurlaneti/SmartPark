@@ -6,7 +6,7 @@ import unidadeService     from '../services/unidadeService';
 import movimentacaoService from '../services/movimentacaoService';
 import contasAPagarService from '../services/contasAPagarService';
 import faturamentoService  from '../services/faturamentoService';
-import { formatCurrency, formatDuration, formatTime } from '../utils/formatters';
+import { formatCurrency, formatDuration } from '../utils/formatters';
 
 function DashboardPage() {
   const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();

@@ -55,7 +55,7 @@ public abstract class RepositoryBase<TEntity> : IRepositoryBase<TEntity>
 
             var colunas = string.Join(", ", props.Select(p => p.Name));
             var valores = string.Join(", ", props.Select(p => $"@{p.Name}"));
-            var sql     = $"INSERT INTO SmartPark.{Tabela} ({colunas}) VALUES ({valores}); SELECT LAST_INSERT_ID();";
+            var sql     = $"INSERT INTO {Tabela} ({colunas}) VALUES ({valores}); SELECT LAST_INSERT_ID();";
 
             var id = await conn.ExecuteScalarAsync<int>(new CommandDefinition(sql, parameters, cancellationToken: ct));
 
@@ -93,7 +93,7 @@ public abstract class RepositoryBase<TEntity> : IRepositoryBase<TEntity>
                 .ToList();
 
             var sets = string.Join(", ", props.Select(p => $"{p.Name} = @{p.Name}"));
-            var sql  = $"UPDATE SmartPark.{Tabela} SET {sets} WHERE Id = @Id AND IsDeleted = 0";
+            var sql  = $"UPDATE {Tabela} SET {sets} WHERE Id = @Id AND IsDeleted = 0";
 
             var rows = await conn.ExecuteAsync(new CommandDefinition(sql, entity, cancellationToken: ct));
 
@@ -129,7 +129,7 @@ public abstract class RepositoryBase<TEntity> : IRepositoryBase<TEntity>
         try
         {
             const string sql = @"
-                UPDATE SmartPark.{0}
+                UPDATE {0}
                    SET IsDeleted = 1,
                        DeletedAt = UTC_TIMESTAMP()
                  WHERE Id = @id
@@ -163,7 +163,7 @@ public abstract class RepositoryBase<TEntity> : IRepositoryBase<TEntity>
         using var conn = _ctx.CreateConnection();
         try
         {
-            var sql = $"SELECT * FROM SmartPark.{Tabela} WHERE Id = @id AND IsDeleted = 0";
+            var sql = $"SELECT * FROM {Tabela} WHERE Id = @id AND IsDeleted = 0";
 
             return await conn.QueryFirstOrDefaultAsync<TEntity>(
                 new CommandDefinition(sql, new { id }, cancellationToken: ct));
@@ -184,7 +184,7 @@ public abstract class RepositoryBase<TEntity> : IRepositoryBase<TEntity>
         using var conn = _ctx.CreateConnection();
         try
         {
-            var sql = $"SELECT * FROM SmartPark.{Tabela} WHERE IsDeleted = 0";
+            var sql = $"SELECT * FROM {Tabela} WHERE IsDeleted = 0";
 
             return await conn.QueryAsync<TEntity>(
                 new CommandDefinition(sql, cancellationToken: ct));
@@ -206,7 +206,7 @@ public abstract class RepositoryBase<TEntity> : IRepositoryBase<TEntity>
         using var conn = _ctx.CreateConnection();
         try
         {
-            var sql = $"SELECT * FROM SmartPark.{Tabela} WHERE Empresa_Id = @empresaId AND IsDeleted = 0";
+            var sql = $"SELECT * FROM {Tabela} WHERE Empresa_Id = @empresaId AND IsDeleted = 0";
 
             return await conn.QueryAsync<TEntity>(
                 new CommandDefinition(sql, new { empresaId }, cancellationToken: ct));

@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { Card, Button, Badge, Modal, FormField, PageHeader, StatCard } from '../components/ui';
+import { Card, Button, Badge, Modal, FormField, PageHeader } from '../components/ui';
 import { Spinner } from '../components/ui';
 import useApi from '../hooks/useApi';
 import unidadeService from '../services/unidadeService';
