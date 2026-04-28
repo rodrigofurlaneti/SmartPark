@@ -10,9 +10,21 @@ function MainLayout({ currentPage, onNavigate, user, onLogout, children }) {
 
   return (
     <ToastContext.Provider value={addToast}>
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
-        <Sidebar currentPage={currentPage} onNavigate={onNavigate} user={user} onLogout={onLogout} />
-        <main style={{ flex: 1, marginLeft: 220, padding: 32, minHeight: '100vh', background: 'var(--bg)' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--parchment)' }}>
+        <Sidebar
+          currentPage={currentPage}
+          onNavigate={onNavigate}
+          user={user}
+          onLogout={onLogout}
+        />
+        <main style={{
+          flex: 1,
+          marginLeft: 'var(--sidebar-w)',
+          padding: '40px 48px',
+          minHeight: '100vh',
+          background: 'var(--parchment)',
+          maxWidth: 'calc(100% - var(--sidebar-w))',
+        }}>
           {children}
         </main>
         <Toast toasts={toasts} removeToast={removeToast} />

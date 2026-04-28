@@ -7,38 +7,52 @@ import { formatDate, formatCurrency } from '../utils/formatters';
 import { ESCALAS } from '../utils/constants';
 import { ToastContext } from '../components/layout/MainLayout';
 
-const ESCALA_COLOR = { Diurno: 'var(--warning)', Noturno: 'var(--accent)', '12x36': 'var(--success)' };
+const EMPRESA_ID = 1;
+const ESCALA_COLOR = { Diurno: 'var(--warning)', Noturno: 'var(--action-blue)', '12x36': 'var(--success)' };
 
 function FuncionariosPage() {
   const addToast = useContext(ToastContext);
   const { data, loading, refetch } = useApi(() => funcionarioService.listarAtivos(), []);
-  const [modal, setModal] = useState(false);
+  const [modal,  setModal]  = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ pessoaId: '', salario: '', escala: 'Diurno', unidadeId: 1 });
+  const [form,   setForm]   = useState({ pessoaId: '', salario: '', escala: 'Diurno', unidadeId: 1, empresaId: EMPRESA_ID });
 
   const handleCriar = async () => {
+    if (!form.pessoaId || !form.salario) { addToast('Preencha todos os campos.', 'warning'); return; }
     setSaving(true);
     try {
-      await funcionarioService.criar({ pessoaId: +form.pessoaId, salario: +form.salario, escala: form.escala, unidadeId: +form.unidadeId });
+      await funcionarioService.criar({
+        pessoaId:  +form.pessoaId,
+        salario:   +form.salario,
+        escala:    form.escala,
+        unidadeId: +form.unidadeId,
+        empresaId: EMPRESA_ID,
+      });
       addToast('Funcionário cadastrado!', 'success');
       setModal(false);
-      setForm({ pessoaId: '', salario: '', escala: 'Diurno', unidadeId: 1 });
+      setForm({ pessoaId: '', salario: '', escala: 'Diurno', unidadeId: 1, empresaId: EMPRESA_ID });
       refetch();
-    } catch { addToast('Erro ao cadastrar.', 'error'); }
+    } catch (e) { addToast(e.response?.data?.erro || 'Erro ao cadastrar.', 'error'); }
     finally { setSaving(false); }
   };
 
   const handleDesligar = async (id, codigo) => {
-    if (!window.confirm(`Desligar funcionário ${codigo}?`)) return;
-    try { await funcionarioService.desligar(id); addToast('Funcionário desligado.', 'success'); refetch(); }
-    catch { addToast('Erro ao desligar.', 'error'); }
+    if (!window.confirm(`Desligar funcionário ${codigo || id}?`)) return;
+    try {
+      await funcionarioService.desligar(id);
+      addToast('Funcionário desligado.', 'success');
+      refetch();
+    } catch (e) { addToast(e.response?.data?.erro || 'Erro.', 'error'); }
   };
 
   const handleSalario = async (id) => {
     const v = window.prompt('Novo salário (R$):');
-    if (!v) return;
-    try { await funcionarioService.alterarSalario(id, parseFloat(v)); addToast('Salário atualizado.', 'success'); refetch(); }
-    catch { addToast('Erro ao atualizar salário.', 'error'); }
+    if (!v || isNaN(+v)) return;
+    try {
+      await funcionarioService.alterarSalario(id, +v);
+      addToast('Salário atualizado.', 'success');
+      refetch();
+    } catch (e) { addToast(e.response?.data?.erro || 'Erro.', 'error'); }
   };
 
   return (
@@ -53,12 +67,14 @@ function FuncionariosPage() {
         {loading ? <Spinner /> : (
           <Table
             columns={[
-              { key: 'codigo',     label: 'Código',    render: v => <span className="mono" style={{ color: 'var(--accent)' }}>{v}</span> },
-              { key: 'status',     label: 'Status',    render: v => <Badge color="var(--success)">{v}</Badge> },
-              { key: 'tipoEscala', label: 'Escala',    render: v => <Badge color={ESCALA_COLOR[v] || 'var(--accent)'}>{v}</Badge> },
-              { key: 'salario',    label: 'Salário',   render: v => <span style={{ color: 'var(--success)' }}>{formatCurrency(v)}</span> },
+              {
+                key: 'codigo', label: 'Código',
+                render: v => <span className="mono" style={{ color: 'var(--action-blue)', fontWeight: 600 }}>{v}</span>,
+              },
+              { key: 'tipoEscala', label: 'Escala', render: v => <Badge color={ESCALA_COLOR[v] || 'var(--action-blue)'}>{v}</Badge> },
+              { key: 'salario',    label: 'Salário', render: v => <span style={{ color: 'var(--success)', fontWeight: 600 }}>{formatCurrency(v)}</span> },
               { key: 'dataAdmissao', label: 'Admissão', render: v => formatDate(v), muted: true },
-              { key: 'unidadeId',  label: 'Unidade',   render: v => v ? `Unidade ${v}` : '—', muted: true },
+              { key: 'unidade_Id',   label: 'Unidade',  render: v => v ? `Unidade ${v}` : '—', muted: true },
             ]}
             data={data || []}
             onAction={row => (
@@ -74,10 +90,13 @@ function FuncionariosPage() {
       {modal && (
         <Modal title="Novo Funcionário" onClose={() => setModal(false)}>
           <FormField label="ID da Pessoa (sistema)">
-            <input type="number" value={form.pessoaId} onChange={e => setForm({ ...form, pessoaId: e.target.value })} placeholder="ID da pessoa cadastrada" />
+            <input type="number" value={form.pessoaId}
+              onChange={e => setForm({ ...form, pessoaId: e.target.value })}
+              placeholder="ID cadastrado no sistema" autoFocus />
           </FormField>
           <FormField label="Salário (R$)">
-            <input type="number" step="0.01" value={form.salario} onChange={e => setForm({ ...form, salario: e.target.value })} placeholder="2500.00" />
+            <input type="number" step="0.01" value={form.salario}
+              onChange={e => setForm({ ...form, salario: e.target.value })} placeholder="2500,00" />
           </FormField>
           <FormField label="Escala de Trabalho">
             <select value={form.escala} onChange={e => setForm({ ...form, escala: e.target.value })}>
@@ -85,15 +104,15 @@ function FuncionariosPage() {
             </select>
           </FormField>
           <FormField label="Unidade">
-            <select value={form.unidadeId} onChange={e => setForm({ ...form, unidadeId: e.target.value })}>
-              <option value={1}>Centro</option>
-              <option value={2}>Vila Madalena</option>
+            <select value={form.unidadeId} onChange={e => setForm({ ...form, unidadeId: +e.target.value })}>
+              <option value={1}>Unidade 1 — Centro</option>
+              <option value={2}>Unidade 2 — Vila Madalena</option>
             </select>
           </FormField>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
             <Button variant="ghost" onClick={() => setModal(false)}>Cancelar</Button>
             <Button onClick={handleCriar} disabled={!form.pessoaId || !form.salario || saving}>
-              {saving ? 'Salvando...' : 'Cadastrar'}
+              {saving ? 'Salvando…' : 'Cadastrar'}
             </Button>
           </div>
         </Modal>

@@ -1,19 +1,24 @@
-import React, { useState, useContext } from 'react';
-import { Card, Button, FormField } from '../components/ui';
+import React, { useState } from 'react';
+import { Button, FormField } from '../components/ui';
 
 function LoginPage({ onLogin }) {
-  const [form, setForm] = useState({ login: '', senha: '' });
+  const [form,    setForm]    = useState({ login: '', senha: '' });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error,   setError]   = useState('');
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
     if (!form.login || !form.senha) { setError('Preencha login e senha.'); return; }
-    setLoading(true); setError('');
+    setLoading(true);
+    setError('');
     try {
       await onLogin(form);
     } catch (err) {
-      setError(err.response?.data?.message || 'Credenciais inválidas.');
+      setError(
+        err.response?.data?.erro ||
+        err.response?.data?.message ||
+        'Credenciais inválidas.'
+      );
     } finally {
       setLoading(false);
     }
@@ -21,66 +26,106 @@ function LoginPage({ onLogin }) {
 
   return (
     <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'var(--bg)', position: 'relative', overflow: 'hidden',
+      minHeight: '100vh',
+      display: 'flex',
+      background: 'var(--parchment)',
     }}>
-      {/* Glow bg */}
+      {/* Left — dark hero tile */}
       <div style={{
-        position: 'absolute', width: 700, height: 700, borderRadius: '50%',
-        background: 'radial-gradient(circle, color-mix(in srgb, var(--accent) 6%, transparent), transparent 65%)',
-        top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none',
-      }} />
-
-      <div style={{ width: '100%', maxWidth: 400, padding: 20 }} className="fade-in">
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ fontSize: 52, marginBottom: 10 }}>🅿</div>
-          <h1 style={{ fontSize: 30, fontWeight: 800, letterSpacing: -1 }}>
-            Smart<span style={{ color: 'var(--accent)' }}>Park</span>
-          </h1>
-          <p style={{ color: 'var(--text-muted)', marginTop: 6, fontSize: 14 }}>
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '45%',
+        background: 'var(--tile-dark-1)',
+        padding: '80px 60px',
+        color: '#ffffff',
+      }}>
+        <div style={{ textAlign: 'center', maxWidth: 360 }}>
+          <div style={{
+            fontSize: 48, fontWeight: 600, letterSpacing: '-0.28px',
+            lineHeight: 1.07, marginBottom: 16,
+          }}>
+            Smart<span style={{ color: 'var(--action-blue)' }}>Park</span>
+          </div>
+          <p style={{
+            fontSize: 21, fontWeight: 400, letterSpacing: '0.231px',
+            color: 'rgba(255,255,255,0.60)', lineHeight: 1.19,
+          }}>
             Sistema de Gestão de Estacionamentos
           </p>
+          <div style={{
+            width: 48, height: 2,
+            background: 'var(--action-blue)',
+            borderRadius: 980,
+            margin: '32px auto 0',
+          }} />
         </div>
+      </div>
 
-        <Card>
+      {/* Right — login form */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '60px 48px',
+      }}>
+        <div style={{ width: '100%', maxWidth: 400 }} className="fade-in">
+          <h2 style={{
+            fontSize: 34, fontWeight: 600, letterSpacing: '-0.374px',
+            color: 'var(--ink)', marginBottom: 8,
+          }}>
+            Entrar
+          </h2>
+          <p style={{ color: 'var(--ink-48)', fontSize: 17, marginBottom: 36 }}>
+            Acesse sua conta para continuar.
+          </p>
+
           {error && (
             <div style={{
-              background: 'color-mix(in srgb, var(--danger) 12%, transparent)',
-              border: '1px solid color-mix(in srgb, var(--danger) 40%, transparent)',
-              color: 'var(--danger)', borderRadius: 8, padding: '10px 14px',
-              fontSize: 13, marginBottom: 16,
+              background: 'rgba(255, 59, 48, 0.08)',
+              border: '1px solid rgba(255, 59, 48, 0.30)',
+              color: 'var(--danger)',
+              borderRadius: 12,
+              padding: '12px 16px',
+              fontSize: 14,
+              marginBottom: 24,
+              letterSpacing: '-0.224px',
             }}>
               {error}
             </div>
           )}
 
-          <FormField label="Login">
-            <input
-              value={form.login}
-              onChange={e => setForm({ ...form, login: e.target.value })}
-              placeholder="seu.usuario"
-              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-              autoFocus
-            />
-          </FormField>
-          <FormField label="Senha">
-            <input
-              type="password"
-              value={form.senha}
-              onChange={e => setForm({ ...form, senha: e.target.value })}
-              placeholder="••••••••"
-              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-            />
-          </FormField>
+          <form onSubmit={handleSubmit}>
+            <FormField label="Login">
+              <input
+                value={form.login}
+                onChange={e => setForm({ ...form, login: e.target.value })}
+                placeholder="seu.usuario"
+                autoFocus
+                autoComplete="username"
+              />
+            </FormField>
+            <FormField label="Senha">
+              <input
+                type="password"
+                value={form.senha}
+                onChange={e => setForm({ ...form, senha: e.target.value })}
+                placeholder="••••••••"
+                autoComplete="current-password"
+              />
+            </FormField>
 
-          <Button
-            style={{ width: '100%', marginTop: 8 }}
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? 'Autenticando...' : 'Entrar'}
-          </Button>
-        </Card>
+            <Button
+              type="submit"
+              style={{ width: '100%', marginTop: 12, fontSize: 17 }}
+              disabled={loading}
+            >
+              {loading ? 'Autenticando…' : 'Entrar'}
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

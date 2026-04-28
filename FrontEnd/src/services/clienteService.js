@@ -1,11 +1,36 @@
 import api from './api';
+
 const clienteService = {
-  listarTodos:       ()        => api.get('/cliente'),
-  listarMensalistas: ()        => api.get('/cliente/mensalistas'),
-  obterPorId:        (id)      => api.get(`/cliente/${id}`),
-  obterPorDocumento: (doc)     => api.get(`/cliente/documento/${doc}`),
-  criar:             (dto)     => api.post('/cliente', dto),
-  atualizar:         (id, dto) => api.put(`/cliente/${id}`, dto),
-  inativar:          (id)      => api.delete(`/cliente/${id}`),
+  listarTodos:       ()        => api.get('/clientes'),
+  listarMensalistas: ()        =>
+    api.get('/clientes').then(res => ({
+      ...res,
+      data: (res.data || []).filter(c => c.isMensalista),
+    })),
+  obterPorId:        (id)      => api.get(`/clientes/${id}`),
+  obterPorDocumento: (doc)     =>
+    api.get('/clientes').then(res => ({
+      ...res,
+      data: (res.data || []).find(c => c.documentoNumero === doc) ?? null,
+    })),
+
+  criar: (dto) =>
+    api.post('/clientes', {
+      Nome:         dto.nome,
+      Documento:    dto.documento,
+      IsMensalista: dto.isMensalista,
+      EmpresaId:    dto.empresaId || 1,
+    }),
+
+  atualizar: (id, dto) =>
+    api.put(`/clientes/${id}`, {
+      Nome:         dto.nome,
+      Documento:    dto.documento,
+      IsMensalista: dto.isMensalista,
+      Ativo:        dto.ativo,
+    }),
+
+  inativar: (id) => api.delete(`/clientes/${id}`),
 };
+
 export default clienteService;

@@ -1,8 +1,22 @@
 import api from './api';
+
 const usuarioService = {
-  login:      (dto)  => api.post('/usuario/login', dto),
-  criar:      (dto)  => api.post('/usuario', dto),
-  obterPorId: (id)   => api.get(`/usuario/${id}`),
-  bloquear:   (id)   => api.delete(`/usuario/${id}`),
+  // Autenticação — POST /api/usuarios/autenticar  {Login, Senha}
+  login: ({ login, senha }) =>
+    api.post('/usuarios/autenticar', { Login: login, Senha: senha }),
+
+  // CRUD
+  listarTodos: ()       => api.get('/usuarios'),
+  obterPorId:  (id)     => api.get(`/usuarios/${id}`),
+  criar: (dto) =>
+    api.post('/usuarios', {
+      Login:     dto.login,
+      Senha:     dto.senha,
+      EmpresaId: dto.empresaId,
+      UnidadeId: dto.unidadeId ?? null,
+    }),
+  atualizar: (id, dto) => api.put(`/usuarios/${id}`, { Ativo: dto.ativo }),
+  bloquear:  (id)      => api.delete(`/usuarios/${id}`),
 };
+
 export default usuarioService;

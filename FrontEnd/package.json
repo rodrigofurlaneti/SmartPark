@@ -32,7 +32,7 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:49676",
+  "proxy": "http://localhost:5080",
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.4",
     "vite": "^7.3.1"
