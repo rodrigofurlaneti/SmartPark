@@ -74,3 +74,12 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Expõe Program para WebApplicationFactory nos projetos de teste
+public partial class Program { };
+
+// Expõe Program para WebApplicationFactory nos projetos de teste
+public partial class Program { }
+
+// Expõe Program para WebApplicationFactory nos projetos de teste
+public partial class Program { }
