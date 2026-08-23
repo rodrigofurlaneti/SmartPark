@@ -1,14 +1,13 @@
--- ============================================================
 -- Parking Management System
 -- MySQL 8.0+
 -- Based on: Documento de Análise de Requisitos - Sistema de Gestão
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS parking_management
+CREATE DATABASE IF NOT EXISTS smartparkdb
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_0900_ai_ci;
 
-USE parking_management;
+USE smartparkdb;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
